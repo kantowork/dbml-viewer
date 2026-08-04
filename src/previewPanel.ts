@@ -27,13 +27,18 @@ export class DbmlPreviewPanel {
       return;
     }
 
+    const localResourceRoots = [
+      extensionUri,
+      vscode.Uri.file(path.dirname(documentUri.fsPath))
+    ];
+
     const panel = vscode.window.createWebviewPanel(
       DbmlPreviewPanel.viewType,
       'DBML Viewer',
       previewColumn,
       {
         enableScripts: true,
-        localResourceRoots: [extensionUri]
+        localResourceRoots: localResourceRoots
       }
     );
 
@@ -48,6 +53,10 @@ export class DbmlPreviewPanel {
     }
   }
 
+  public triggerPrint() {
+    this._panel.webview.postMessage({ command: 'triggerPrint' });
+  }
+
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, documentUri: vscode.Uri) {
     this._panel = panel;
     this._extensionUri = extensionUri;
@@ -56,6 +65,16 @@ export class DbmlPreviewPanel {
     this._update();
 
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+
+    this._panel.webview.onDidReceiveMessage(
+      message => {
+        if (message.command === 'exportPdf') {
+          vscode.commands.executeCommand('dbmlPreview.exportPdf', this._documentUri);
+        }
+      },
+      null,
+      this._disposables
+    );
 
     vscode.workspace.onDidChangeTextDocument(
       e => {
@@ -79,7 +98,12 @@ export class DbmlPreviewPanel {
 
     vscode.workspace.onDidChangeConfiguration(
       e => {
-        if (e.affectsConfiguration('dbmlPreview.theme') || e.affectsConfiguration('dbmlPreview.language')) {
+        if (
+          e.affectsConfiguration('dbmlPreview.theme') ||
+          e.affectsConfiguration('dbmlPreview.language') ||
+          e.affectsConfiguration('dbmlPreview.pdfPageSize') ||
+          e.affectsConfiguration('dbmlPreview.pdfOrientation')
+        ) {
           this._update();
         }
       },
@@ -102,16 +126,26 @@ export class DbmlPreviewPanel {
   }
 
   private async _update() {
+    if (!this._panel.visible) {
+      return;
+    }
     try {
-      const document = await vscode.workspace.openTextDocument(this._documentUri);
+      let document: vscode.TextDocument;
+      if (this._documentUri.scheme === 'file') {
+        document = await vscode.workspace.openTextDocument(this._documentUri.fsPath);
+      } else {
+        document = await vscode.workspace.openTextDocument(this._documentUri);
+      }
       const text = document.getText();
       const fileName = path.basename(document.fileName);
       const theme = vscode.workspace.getConfiguration('dbmlPreview').get<string>('theme', 'system');
       const lang = vscode.workspace.getConfiguration('dbmlPreview').get<string>('language', 'auto');
+      const pageSize = vscode.workspace.getConfiguration('dbmlPreview').get<string>('pdfPageSize', 'A4');
+      const orientation = vscode.workspace.getConfiguration('dbmlPreview').get<string>('pdfOrientation', 'portrait');
 
       this._panel.title = `DBML Viewer: ${fileName}`;
       const parsed = parseDbmlContent(text, document.fileName);
-      this._panel.webview.html = renderHtmlDocument(parsed, fileName, theme, lang);
+      this._panel.webview.html = renderHtmlDocument(parsed, fileName, theme, lang, pageSize, orientation);
     } catch (err) {
       this._panel.webview.html = `<html><body><h3>DBMLファイルの読み込み中にエラーが発生しました: ${String(err)}</h3></body></html>`;
     }

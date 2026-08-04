@@ -3,5 +3,6 @@
 node_modules/
 out/
 *.vsix
+*.pdf
 .DS_Store
 Thumbs.db

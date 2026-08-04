@@ -2,7 +2,7 @@ import { ParsedDbml, TableMeta, ColumnMeta, TableGroupMeta, StickyNoteMeta, Enum
 import { generateMermaidErDiagram } from './mermaidGenerator';
 import { getTranslations, Translations } from './i18n';
 
-export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: string = 'system', lang: string = 'auto'): string {
+export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: string = 'system', lang: string = 'auto', pageSize: string = 'A4', orientation: string = 'portrait'): string {
   const t = getTranslations(lang);
   const mermaidDiagram = generateMermaidErDiagram(parsed);
 
@@ -264,9 +264,61 @@ export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: str
       border-radius: 4px;
       font-size: 12px;
     }
+
+    /* Print / PDF Styles */
+    @page {
+      size: ${escapeHtml(pageSize)} ${escapeHtml(orientation)};
+      margin: 12mm;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        min-width: 100% !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .card {
+        page-break-inside: avoid;
+      }
+      .mermaid-container {
+        page-break-inside: avoid;
+      }
+      table.data-table th, table.data-table td {
+        border-color: #cccccc !important;
+      }
+    }
+
+    .export-pdf-toolbar {
+      position: fixed;
+      top: 12px;
+      right: 20px;
+      z-index: 9999;
+    }
+
+    .export-pdf-btn {
+      background-color: var(--vscode-button-background, #0e639c);
+      color: var(--vscode-button-foreground, #ffffff);
+      border: none;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: opacity 0.2s;
+    }
+
+    .export-pdf-btn:hover {
+      opacity: 0.9;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script>
+    const vscode = acquireVsCodeApi();
     document.addEventListener("DOMContentLoaded", function() {
       const isLight = document.documentElement.getAttribute('data-theme') === 'light' || 
         (document.documentElement.getAttribute('data-theme') === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
@@ -276,9 +328,24 @@ export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: str
         securityLevel: 'loose'
       });
     });
+
+    window.addEventListener('message', event => {
+      const message = event.data;
+      if (message.command === 'triggerPrint') {
+        window.print();
+      }
+    });
+
+    function requestExportPdf() {
+      window.print();
+    }
   </script>
 </head>
 <body>
+
+  <div class="export-pdf-toolbar no-print">
+    <button class="export-pdf-btn" onclick="requestExportPdf()">${escapeHtml(t.exportPdfBtn)}</button>
+  </div>
 
   <div class="doc-header">
     <div class="doc-title">📋 ${t.docTitle}: ${escapeHtml(title)}</div>

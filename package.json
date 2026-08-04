@@ -2,7 +2,7 @@
   "name": "k-dbml-viewer",
   "displayName": "DBML Viewer",
   "description": "Preview DBML files as Table Design Documents with Meta attributes and Mermaid ER diagrams",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "kantowork",
   "engines": {
     "vscode": "^1.125.0"
@@ -44,6 +44,12 @@
         "title": "Toggle DBML Preview",
         "category": "DBML Viewer",
         "icon": "$(layout-split)"
+      },
+      {
+        "command": "dbmlPreview.exportPdf",
+        "title": "Export PDF",
+        "category": "DBML Viewer",
+        "icon": "$(file-pdf)"
       }
     ],
     "menus": {
@@ -55,11 +61,19 @@
         {
           "command": "dbmlPreview.togglePreview",
           "group": "navigation"
+        },
+        {
+          "command": "dbmlPreview.exportPdf",
+          "group": "navigation"
         }
       ],
       "editor/context": [
         {
           "command": "dbmlPreview.openPreview",
+          "group": "navigation"
+        },
+        {
+          "command": "dbmlPreview.exportPdf",
           "group": "navigation"
         }
       ]
@@ -94,6 +108,29 @@
           ],
           "default": "auto",
           "description": "Language for DBML Viewer"
+        },
+        "dbmlPreview.pdfPageSize": {
+          "type": "string",
+          "enum": [
+            "A4",
+            "A3",
+            "A5",
+            "B4",
+            "B5",
+            "Letter",
+            "Legal"
+          ],
+          "default": "A4",
+          "description": "PDF size"
+        },
+        "dbmlPreview.pdfOrientation": {
+          "type": "string",
+          "enum": [
+            "portrait",
+            "landscape"
+          ],
+          "default": "portrait",
+          "description": "PDF oriantation"
         }
       }
     }
@@ -105,7 +142,8 @@
     "build": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node"
   },
   "dependencies": {
-    "@dbml/core": "^9.1.1"
+    "@dbml/core": "^9.1.1",
+    "puppeteer-core": "^25.4.0"
   },
   "devDependencies": {
     "@types/node": "^18.19.130",

@@ -24,6 +24,7 @@ export interface Translations {
   enumValueName: string;
   schema: string;
   debugMermaidShow: string;
+  exportPdfBtn: string;
 }
 
 export const translations: Record<'en' | 'ja', Translations> = {
@@ -50,7 +51,8 @@ export const translations: Record<'en' | 'ja', Translations> = {
     relationDefHeading: 'Relationship (Ref) Definitions',
     enumValueName: 'Value Name',
     schema: 'schema',
-    debugMermaidShow: 'Show Mermaid'
+    debugMermaidShow: 'Show Mermaid',
+    exportPdfBtn: '📄 PDFで出力'
   },
   en: {
     docTitle: 'DBML Viewer',
@@ -75,7 +77,8 @@ export const translations: Record<'en' | 'ja', Translations> = {
     relationDefHeading: 'Relationship (Ref) Definitions',
     enumValueName: 'Value Name',
     schema: 'Schema',
-    debugMermaidShow: 'Show Mermaid'
+    debugMermaidShow: 'Show Mermaid',
+    exportPdfBtn: '📄 Export PDF'
   }
 };
 
