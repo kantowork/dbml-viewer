@@ -1,0 +1,13 @@
+// Common audit columns definitions
+TablePartial audit_fields {
+  created_at timestamp [default: `now()`, note: '作成日時']
+  updated_at timestamp [default: `now()`, note: '更新日時']
+  created_by varchar(50) [note: '作成者ユーザーID']
+}
+
+// Common Enum definition imported from external partial file
+Enum common_currency {
+  JPY [note: 'Japanese Yen']
+  USD [note: 'US Dollar']
+  EUR [note: 'Euro']
+}

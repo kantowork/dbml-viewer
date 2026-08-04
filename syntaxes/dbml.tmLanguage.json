@@ -1,0 +1,60 @@
+{
+  "name": "DBML",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#strings" },
+    { "include": "#constants" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.dbml",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.dbml",
+          "start": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.dbml",
+          "match": "\\b(Table|TableGroup|TablePartial|Project|Ref|Enum|Metadata|DiagramView|Note|indexes|indexes)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.dbml",
+          "start": "'''",
+          "end": "'''"
+        },
+        {
+          "name": "string.quoted.single.dbml",
+          "start": "'",
+          "end": "'"
+        },
+        {
+          "name": "string.quoted.double.dbml",
+          "start": "\"",
+          "end": "\""
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.dbml",
+          "match": "\\b(true|false|null|pk|primary key|not null|null|unique|increment|default)\\b"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.dbml"
+}

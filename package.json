@@ -1,0 +1,116 @@
+{
+  "name": "k-dbml-viewer",
+  "displayName": "DBML Viewer",
+  "description": "Preview DBML files as Table Design Documents with Meta attributes and Mermaid ER diagrams",
+  "version": "1.0.0",
+  "publisher": "kantowork",
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "Visualization",
+    "Programming Languages",
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kantowork/dbml-viewer"
+  },
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "dbml",
+        "aliases": [
+          "DBML",
+          "dbml"
+        ],
+        "extensions": [
+          ".dbml"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "dbmlPreview.openPreview",
+        "title": "Preview DBML",
+        "category": "DBML Viewer",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "dbmlPreview.togglePreview",
+        "title": "Toggle DBML Preview",
+        "category": "DBML Viewer",
+        "icon": "$(layout-split)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "dbmlPreview.openPreview",
+          "group": "navigation"
+        },
+        {
+          "command": "dbmlPreview.togglePreview",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "dbmlPreview.openPreview",
+          "group": "navigation"
+        }
+      ]
+    },
+    "grammars": [
+      {
+        "language": "dbml",
+        "scopeName": "source.dbml",
+        "path": "./syntaxes/dbml.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "DBML Viewer",
+      "properties": {
+        "dbmlPreview.theme": {
+          "type": "string",
+          "enum": [
+            "system",
+            "dark",
+            "light"
+          ],
+          "default": "system",
+          "description": "Color theme"
+        },
+        "dbmlPreview.language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "ja"
+          ],
+          "default": "auto",
+          "description": "Language for DBML Viewer"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "build": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node"
+  },
+  "dependencies": {
+    "@dbml/core": "^9.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "@types/vscode": "^1.125.0",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.9.3"
+  }
+}

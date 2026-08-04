@@ -1,0 +1,139 @@
+// Import common audit fields partial
+use * from './common_fields.dbml'
+
+// Project Definition
+Project e_commerce {
+  database_type: 'PostgreSQL'
+  Note: '''
+  # E-Commerce Database Schema
+  Database documentation and design specification with enrichment and visualization metadata.
+  '''
+}
+
+// Local Enum Definition (Defined in current file)
+Enum user_status {
+  active [note: 'Normal operating user']
+  suspended [note: 'Temporarily disabled account']
+  deleted [note: 'Soft deleted user']
+}
+
+// TableGroup Definition
+TableGroup user_management [color: #3498DB, team: "growth", note: 'User and identity management'] {
+  users
+  user_profiles
+}
+
+TableGroup sales [color: #2ECC71, team: "commerce"] {
+  orders
+  order_items
+}
+
+// Table 1: Users Table Definition
+Table users [headercolor: #3498DB, owner: "security-team", sla_hours: "24", data_tier: "tier-1"] {
+  id int [pk, increment, description: 'Primary identifier for user']
+  username varchar(50) [not null, unique, note: 'Unique username for login']
+  email varchar(255) [not null, unique, classification: "confidential", pii: "true"]
+  status user_status [default: 'active', note: 'User account status using local Enum user_status']
+  created_at timestamp [default: `now()`, note: 'Record creation timestamp']
+
+  // TablePartial inclusion
+  ~audit_fields
+
+  Note: 'Stores user credentials, account status, and core metadata'
+
+  indexes {
+    id [name: "pk_users_idx", note: "Primary key index"]
+    (username, email) [name: "composite_user_idx", unique, note: "Composite unique search index"]
+  }
+}
+
+// Table 2: User Profiles
+Table user_profiles [headercolor: #DB3498, owner: "data-team"] {
+  user_id int [pk, ref: - users.id, note: 'Foreign key to users table']
+  full_name varchar(100) [note: 'User full display name', pii: "true", masking: "full"]
+  address text [note: 'Shipping address', pii: "true", masking: "partial"]
+  avatar_url varchar(2083) [note: 'Profile picture URL']
+  
+  ~audit_fields
+
+  Note: 'Stores extended profile attributes for user'
+}
+
+// Table 3: Orders
+Table orders [headercolor: #2ECC71, owner: "checkout-team", retention_days: "365"] {
+  id int [pk, increment, note: 'Order ID']
+  user_id int [not null, note: 'Purchasing user']
+  total_amount decimal(10,2) [not null, note: 'Total order cost']
+  currency common_currency [not null, default: 'USD', note: 'Currency using imported Enum common_currency']
+  order_status varchar(30) [not null, default: 'pending', note: 'Current status of order fulfillment']
+  ordered_at timestamp [not null, default: `now()`]
+
+  Note: 'Contains customer order headers and monetary totals'
+}
+
+// Table 4: Order Items
+Table order_items [headercolor: #2ECC71, owner: "checkout-team"] {
+  id int [pk, increment]
+  order_id int [not null, ref: > orders.id]
+  product_name varchar(200) [not null]
+  quantity int [not null, default: 1]
+  unit_price decimal(10,2) [not null]
+
+  Note: 'Line items belonging to customer orders'
+}
+
+// Table 5: Ungrouped Table (Standalone Table with Multiple Indexes)
+Table system_logs [owner: "infra-team", retention_days: "30"] {
+  id bigint [pk, increment, note: 'Log entry ID']
+  log_level varchar(10) [not null, default: 'INFO', note: 'Severity level (INFO, WARN, ERROR)']
+  message text [not null, note: 'Log message details']
+  created_at timestamp [not null, default: `now()`]
+
+  ~audit_fields
+
+  Note: 'System audit and operational log records (Standalone / Ungrouped table)'
+
+  indexes {
+    id [name: "pk_system_logs_idx", note: "Primary key index"]
+    log_level [name: "idx_syslog_level", note: "Index for filtering logs by severity level"]
+    created_at [name: "idx_syslog_created_at", note: "Time-series index for log retention and range queries"]
+    (log_level, created_at) [name: "idx_syslog_level_created", note: "Composite index for filtering level within time ranges"]
+  }
+}
+
+// Explicit Relationships (Refs) with Enrichment
+Ref: orders.user_id > users.id [color: #79AD51, delete: cascade]
+Ref: order_items.order_id > orders.id [color: #E74C3C, delete: cascade]
+
+// External Table Ref Example (Demonstrates unresolvable external reference in ER diagram)
+Ref: orders.payment_id > external_payments.id [note: 'Ref to unmapped external payments service']
+
+// Inactive Ref Example
+Ref: users.id - orders.id [inactive, note: 'Historical shortcut reference']
+
+// Composite Relationship (Composite Ref)
+Ref: (order_items.order_id, order_items.id) > (orders.id, orders.user_id) [note: 'Composite relationship linking order items to order header']
+
+// Sticky Note Definition
+Note schema_guidelines [author: "architecture-board", color: #F4D03F] {
+  'All PII columns must have masking and classification attributes set per GDPR compliance.'
+}
+
+// Separate Metadata Blocks (Precedence & Modular Metadata)
+Metadata Table users {
+  security_review: 'approved'
+  compliance: 'GDPR, CCPA'
+}
+
+Metadata Column users.email {
+  masking: 'partial'
+  audit_level: 'high'
+}
+
+// Diagram View Definition
+DiagramView core_view {
+  Tables {
+    users
+    orders
+  }
+}
