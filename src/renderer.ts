@@ -1,6 +1,10 @@
+import * as fs from 'fs';
 import { ParsedDbml, TableMeta, ColumnMeta, TableGroupMeta, StickyNoteMeta, EnumMeta } from './types';
 import { generateMermaidErDiagram } from './mermaidGenerator';
 import { getTranslations, Translations } from './i18n';
+
+const mermaidScript = fs.readFileSync(require.resolve('mermaid/dist/mermaid.min.js'), 'utf8');
+const mermaidScriptSafe = mermaidScript.replace(/<\/script>/g, '<\\/script>');
 
 export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: string = 'system', lang: string = 'auto', pageSize: string = 'A4', orientation: string = 'portrait'): string {
   const t = getTranslations(lang);
@@ -315,10 +319,56 @@ export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: str
     .export-pdf-btn:hover {
       opacity: 0.9;
     }
+
+    .mermaid-error {
+      display: none;
+      color: var(--vscode-editorError-foreground, #f48771);
+      background: var(--vscode-editorError-background, rgba(244, 134, 113, 0.12));
+      border: 1px solid var(--vscode-editorError-border, #f48771);
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 12px;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+${mermaidScriptSafe}
+  </script>
   <script>
     const vscode = acquireVsCodeApi();
+
+    function showMermaidError(errorMessage) {
+      const errorBox = document.getElementById('mermaid-error');
+      if (!errorBox) return;
+      errorBox.style.display = 'block';
+      errorBox.textContent = 'Mermaid syntax error:\n' + errorMessage;
+    }
+
+    function clearMermaidError() {
+      const errorBox = document.getElementById('mermaid-error');
+      if (!errorBox) return;
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+    }
+
+    function validateMermaidBlocks() {
+      clearMermaidError();
+      if (!window.mermaid || typeof mermaid.parse !== 'function') {
+        return;
+      }
+      const blocks = document.querySelectorAll('.mermaid');
+      blocks.forEach((block) => {
+        const diagram = block.textContent || '';
+        if (!diagram.trim()) return;
+        try {
+          mermaid.parse(diagram);
+        } catch (err) {
+          showMermaidError(err?.str || err?.message || String(err));
+        }
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", function() {
       const isLight = document.documentElement.getAttribute('data-theme') === 'light' || 
         (document.documentElement.getAttribute('data-theme') === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
@@ -327,6 +377,12 @@ export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: str
         theme: isLight ? 'default' : 'dark',
         securityLevel: 'loose'
       });
+      if (typeof mermaid.setParseErrorHandler === 'function') {
+        mermaid.setParseErrorHandler(function(err) {
+          showMermaidError(err?.str || err?.message || String(err));
+        });
+      }
+      validateMermaidBlocks();
     });
 
     window.addEventListener('message', event => {
@@ -375,6 +431,7 @@ export function renderHtmlDocument(parsed: ParsedDbml, title: string, theme: str
       <pre class="mermaid">
 ${mermaidDiagram}
       </pre>
+      <div id="mermaid-error" class="mermaid-error"></div>
     </div>
     <details style="margin-top: 12px; text-align: left;">
       <summary style="cursor: pointer; color: var(--accent-color); font-weight: bold;">${t.debugMermaidShow}</summary>

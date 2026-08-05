@@ -27,6 +27,15 @@ PDF export utilizes headless Chromium via system-installed browsers. Ensure at l
 - **macOS**: Google Chrome, Microsoft Edge, Brave Browser (`/Applications`)
 - **Linux**: Google Chrome, Chromium, Microsoft Edge (`/usr/bin`)
 
+### Included Third-Party Libraries
+
+This extension bundles and uses the following open source software:
+- `mermaid` for rendering ER diagrams in the preview HTML
+- `@dbml/core` for DBML parsing and AST handling
+- `puppeteer-core` for PDF export via headless Chromium
+
+If additional OSS dependencies are added later, they should be listed here as well.
+
 If a PDF file with the same name already exists in the same folder, a timestamp suffix (e.g. `filename_YYYYMMDD-HHMMSS.pdf`) is automatically appended to prevent overwriting.
 
 ## Extension Settings

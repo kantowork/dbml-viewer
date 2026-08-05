@@ -2,7 +2,7 @@
   "name": "k-dbml-viewer",
   "displayName": "DBML Viewer",
   "description": "Preview DBML files as Table Design Documents with Meta attributes and Mermaid ER diagrams",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "publisher": "kantowork",
   "engines": {
     "vscode": "^1.125.0"
@@ -56,25 +56,30 @@
       "editor/title": [
         {
           "command": "dbmlPreview.openPreview",
-          "group": "navigation"
+          "group": "navigation",
+          "when": "resourceExtname == .dbml"
         },
         {
           "command": "dbmlPreview.togglePreview",
-          "group": "navigation"
+          "group": "navigation",
+          "when": "resourceExtname == .dbml"
         },
         {
           "command": "dbmlPreview.exportPdf",
-          "group": "navigation"
+          "group": "navigation",
+          "when": "resourceExtname == .dbml"
         }
       ],
       "editor/context": [
         {
           "command": "dbmlPreview.openPreview",
-          "group": "navigation"
+          "group": "navigation",
+          "when": "resourceExtname == .dbml"
         },
         {
           "command": "dbmlPreview.exportPdf",
-          "group": "navigation"
+          "group": "navigation",
+          "when": "resourceExtname == .dbml"
         }
       ]
     },
@@ -139,10 +144,12 @@
     "vscode:prepublish": "npm run build",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "build": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node"
+    "build": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "package": "npm run build && npx vsce package"
   },
   "dependencies": {
     "@dbml/core": "^9.1.1",
+    "mermaid": "^10.4.0",
     "puppeteer-core": "^25.4.0"
   },
   "devDependencies": {

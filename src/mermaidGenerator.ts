@@ -151,14 +151,10 @@ export function generateMermaidErDiagram(parsed: ParsedDbml): string {
       const leftSym = getLeftCardinality(ep1.relation);
       const rightSym = getRightCardinality(ep2.relation);
 
-      // Label on the relationship line: MUST be Ref note if provided, otherwise empty/omitted
-      const label = ref.note ? ref.note : '';
+      // Label on the relationship line: use Ref note if provided, otherwise omit the label.
+      const label = ref.note ? escapeComment(ref.note) : '';
 
-      if (label) {
-        lines.push(`  ${t1} ${leftSym}--${rightSym} ${t2} : "${escapeComment(label)}"`);
-      } else {
-        lines.push(`  ${t1} ${leftSym}--${rightSym} ${t2} : " "`);
-      }
+      lines.push(`  ${t1} ${leftSym}--${rightSym} ${t2} : "${label ?? '" "'}"`);
     }
   }
 

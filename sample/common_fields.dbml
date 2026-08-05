@@ -3,6 +3,13 @@ TablePartial audit_fields {
   created_at timestamp [default: `now()`, note: '作成日時']
   updated_at timestamp [default: `now()`, note: '更新日時']
   created_by varchar(50) [note: '作成者ユーザーID']
+  is_deleted deletion_flag [ default: 0 ]
+}
+
+Enum deletion_flag {
+  0 [note: 'Valid']
+  1 [note: 'Deleted']
+  2 [note: 'Deleted by system']
 }
 
 // Common Enum definition imported from external partial file
