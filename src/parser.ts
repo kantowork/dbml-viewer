@@ -109,17 +109,29 @@ function parseTablePartials(content: string, workingDir: string | undefined, res
   }
 
   // Parse TablePartial blocks: TablePartial partial_name { ... }
-  const partialRegex = /TablePartial\s+([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n\}/g;
-  while ((match = partialRegex.exec(content)) !== null) {
+  const partialHeaderRegex = /TablePartial\s+([A-Za-z0-9_]+)\s*\{/g;
+  while ((match = partialHeaderRegex.exec(content)) !== null) {
     const partialName = match[1];
-    const body = match[2];
-    const cols: ColumnMeta[] = [];
+    const bodyStart = match.index + match[0].length;
+    let braceCount = 1;
+    let bodyEnd = bodyStart;
 
+    while (bodyEnd < content.length && braceCount > 0) {
+      if (content[bodyEnd] === '{') braceCount++;
+      else if (content[bodyEnd] === '}') braceCount--;
+      bodyEnd++;
+    }
+
+    if (braceCount !== 0) continue;
+
+    const body = content.substring(bodyStart, bodyEnd - 1);
+    const cols: ColumnMeta[] = [];
     const lines = body.split('\n');
+
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('//')) continue;
-      const colMatch = /^([A-Za-z0-9_]+)\s+([A-Za-z0-9_().`'-]+)(?:\s*\[([^\]]+)\])?/.exec(trimmed);
+      const colMatch = /^([A-Za-z0-9_]+)\s+([A-Za-z0-9_().`'"-]+)(?:\s*\[([^\]]+)\])?/.exec(trimmed);
       if (colMatch) {
         const colName = colMatch[1];
         const typeStr = colMatch[2];
@@ -152,18 +164,19 @@ function parseTablePartials(content: string, workingDir: string | undefined, res
         cols.push(col);
       }
     }
+
     result.tablePartials[partialName] = cols;
   }
 }
 
 function expandTablePartialsInContent(content: string, partials: Record<string, ColumnMeta[]>): string {
-  // Replace ~partial_name in Table blocks with actual column definitions
-  return content.replace(/^\s*~([A-Za-z0-9_]+)\s*$/gm, (match, partialName) => {
+  // Replace ~partial_name in Table blocks with actual column definitions, preserving indentation.
+  return content.replace(/^(\s*)~([A-Za-z0-9_]+)\s*$/gm, (match, indent, partialName) => {
     const cols = partials[partialName];
-    if (!cols) return match;
+    if (!cols) return '';
     return cols
       .map((c) => {
-        let line = `  ${c.name} ${c.type}`;
+        let line = `${indent}${c.name} ${c.type}`;
         const settings: string[] = [];
         if (c.pk) settings.push('pk');
         if (c.notNull) settings.push('not null');

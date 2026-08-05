@@ -2,8 +2,6 @@
 
 **DBML Viewer** is a VS Code extension that renders DBML (Database Markup Language) files as interactive, beautifully formatted Table Design Documents alongside live Mermaid ER diagrams.
 
-![DBML Viewer](https://raw.githubusercontent.com/dbml-tools/dbml-viewer/main/images/preview.png)
-
 ## Features
 
 - 📋 **Comprehensive Table Design Documents**: Displays Table, Column, Index, Enum, and Relationship definitions in clean, monochromatic design cards.
